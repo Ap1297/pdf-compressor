@@ -41,8 +41,10 @@ public class PDFCompressorService {
         Path inputPath = uploadDir.resolve(fileId + ".pdf");
         Path outputPath = outputDir.resolve(fileId + "_compressed.pdf");
 
-        // Save the uploaded file
-        Files.write(inputPath, file.getBytes());
+        try (var inputStream = file.getInputStream()) {
+            Files.copy(inputStream, inputPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
 
         // Get original file size
         long originalSize = Files.size(inputPath);
@@ -91,10 +93,9 @@ public class PDFCompressorService {
     }
     
     private void compressWithImageConversion(PDDocument document, String outputPath, float quality) throws IOException {
-        // Create a new document for the compressed output
-        PDDocument compressedDocument = new PDDocument();
         
-        try {
+        
+        try (PDDocument compressedDocument = new PDDocument()) {
             // Create a renderer for the original document
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             
@@ -128,9 +129,10 @@ public class PDFCompressorService {
             
             // Save the compressed document
             compressedDocument.save(outputPath);
-        } finally {
-            // Close the compressed document
+         // Close the compressed document
             compressedDocument.close();
+        } finally {
+            
         }
     }
     

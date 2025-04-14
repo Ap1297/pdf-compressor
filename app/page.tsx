@@ -32,6 +32,15 @@ export default function PDFCompressor() {
         })
         return
       }
+      if (selectedFile.size > 1024 * 1024 * 1024) { // 1GB
+        toast({
+          title: "File too large",
+          description: "Please select a PDF smaller than 1GB",
+          variant: "destructive",
+        })
+        return
+      }
+      
       setFile(selectedFile)
       setOriginalSize(selectedFile.size)
       setCompressedFile(null)
@@ -179,7 +188,7 @@ export default function PDFCompressor() {
             <label htmlFor="pdf-upload" className="flex flex-col items-center justify-center cursor-pointer">
               <Upload className="h-10 w-10 text-gray-400 mb-2" />
               <span className="text-sm font-medium">{file ? file.name : "Click to upload or drag and drop"}</span>
-              <span className="text-xs text-gray-500 mt-1">PDF (max. 10MB)</span>
+              <span className="text-xs text-gray-500 mt-1">PDF (max. 1GB)</span>
             </label>
           </div>
 

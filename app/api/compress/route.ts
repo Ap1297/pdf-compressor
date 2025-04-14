@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 // Spring Boot API URL
 const prod = "https://pdf-compressor-production.up.railway.app/api"
 const local = "http://localhost:8080/api"
-const SPRING_BOOT_API = prod
+const SPRING_BOOT_API = local
 
 export async function POST(request: NextRequest) {
   try {
