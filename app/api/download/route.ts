@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 // Spring Boot API URL
-const SPRING_BOOT_API = "http://localhost:8080/api"
+const SPRING_BOOT_API = "https://pdf-compressor-production.up.railway.app/api"
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     if (!fileName) {
       return NextResponse.json({ error: "No file specified" }, { status: 400 })
     }
-
+console.log(SPRING_BOOT_API);
     // Forward the request to Spring Boot
     const response = await fetch(`${SPRING_BOOT_API}/download/${fileName}`)
 
