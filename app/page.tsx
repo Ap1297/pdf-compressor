@@ -69,7 +69,8 @@ export default function PDFCompressor() {
       setProgress(100)
 
       if (!response.ok) {
-        throw new Error("Compression failed")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Compression failed")
       }
 
       const data = await response.json()
@@ -83,7 +84,7 @@ export default function PDFCompressor() {
     } catch (error) {
       toast({
         title: "Compression failed",
-        description: "An error occurred while compressing the PDF",
+        description: error instanceof Error ? error.message : "An error occurred while compressing the PDF",
         variant: "destructive",
       })
       console.error(error)

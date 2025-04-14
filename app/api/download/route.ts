@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { readFile } from "fs/promises"
-import { join } from "path"
-import { stat } from "fs/promises"
+
+// Spring Boot API URL
+const SPRING_BOOT_API = "http://localhost:8080/api"
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,15 +12,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No file specified" }, { status: 400 })
     }
 
-    const filePath = join(process.cwd(), "outputs", fileName)
+    // Forward the request to Spring Boot
+    const response = await fetch(`${SPRING_BOOT_API}/download/${fileName}`)
 
-    try {
-      await stat(filePath)
-    } catch (error) {
-      return NextResponse.json({ error: "File not found" }, { status: 404 })
+    if (!response.ok) {
+      return NextResponse.json({ error: "File not found" }, { status: response.status })
     }
 
-    const fileBuffer = await readFile(filePath)
+    // Get the file content
+    const fileBuffer = await response.arrayBuffer()
 
     // Set appropriate headers for file download
     const headers = new Headers()
