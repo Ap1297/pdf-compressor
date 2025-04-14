@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 // Spring Boot API URL
-const SPRING_BOOT_API = "https://pdf-compressor-production.up.railway.app/api"
+const prod = "https://pdf-compressor-production.up.railway.app/api"
+const local = "http://localhost:8080/api"
+const SPRING_BOOT_API = prod
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +26,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: data.success,
       downloadUrl: `/api/download?file=${data.fileName}`,
+      originalSize: data.originalSize,
       compressedSize: data.compressedSize,
     })
   } catch (error) {

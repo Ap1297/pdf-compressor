@@ -14,6 +14,7 @@ import { Toaster } from "@/components/ui/toaster"
 export default function PDFCompressor() {
   const [file, setFile] = useState<File | null>(null)
   const [compressedFile, setCompressedFile] = useState<string | null>(null)
+  const [compressedFileName, setCompressedFileName] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [compressionLevel, setCompressionLevel] = useState([50])
@@ -34,6 +35,7 @@ export default function PDFCompressor() {
       setFile(selectedFile)
       setOriginalSize(selectedFile.size)
       setCompressedFile(null)
+      setCompressedFileName(null)
       setCompressedSize(null)
     }
   }
@@ -75,11 +77,16 @@ export default function PDFCompressor() {
 
       const data = await response.json()
       setCompressedFile(data.downloadUrl)
+      // Extract the filename from the download URL
+      const fileName = data.downloadUrl.split("=")[1]
+      setCompressedFileName(fileName)
+      // Use the original size from the API response instead of the local file size
+      setOriginalSize(data.originalSize)
       setCompressedSize(data.compressedSize)
 
       toast({
         title: "Compression complete",
-        description: `Reduced from ${formatFileSize(originalSize!)} to ${formatFileSize(data.compressedSize)}`,
+        description: `Reduced from ${formatFileSize(data.originalSize)} to ${formatFileSize(data.compressedSize)}`,
       })
     } catch (error) {
       toast({
@@ -93,6 +100,31 @@ export default function PDFCompressor() {
     }
   }
 
+  const handleDownloadAndDelete = async () => {
+    if (!compressedFile || !compressedFileName) return
+
+    // Start the download
+    window.location.href = compressedFile
+
+    // Wait a moment to ensure the download has started
+    setTimeout(async () => {
+      try {
+        // Delete the file
+        const response = await fetch(`/api/delete?file=${compressedFileName}`, {
+          method: "DELETE",
+        })
+
+        if (!response.ok) {
+          console.error("Failed to delete file:", await response.json())
+        } else {
+          console.log("File deleted successfully")
+        }
+      } catch (error) {
+        console.error("Error deleting file:", error)
+      }
+    }, 2000) // Wait 2 seconds to ensure download has started
+  }
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes"
     const k = 1024
@@ -104,6 +136,23 @@ export default function PDFCompressor() {
   const calculateReduction = () => {
     if (!originalSize || !compressedSize) return 0
     return Math.round(((originalSize - compressedSize) / originalSize) * 100)
+  }
+
+  const handleClear = () => {
+    // If we have a compressed file, delete it before clearing the state
+    if (compressedFileName) {
+      fetch(`/api/delete?file=${compressedFileName}`, {
+        method: "DELETE",
+      }).catch((error) => {
+        console.error("Error deleting file during clear:", error)
+      })
+    }
+
+    setFile(null)
+    setCompressedFile(null)
+    setCompressedFileName(null)
+    setOriginalSize(null)
+    setCompressedSize(null)
   }
 
   return (
@@ -177,7 +226,9 @@ export default function PDFCompressor() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Reduction:</span>
-                    <span className="text-sm text-green-600">{calculateReduction()}%</span>
+                    <span className={`text-sm ${calculateReduction() > 0 ? "text-green-600" : "text-red-600"}`}>
+                      {calculateReduction() > 0 ? `${calculateReduction()}%` : "No reduction"}
+                    </span>
                   </div>
                 </div>
               )}
@@ -185,24 +236,13 @@ export default function PDFCompressor() {
           )}
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setFile(null)
-              setCompressedFile(null)
-              setOriginalSize(null)
-              setCompressedSize(null)
-            }}
-            disabled={!file || loading}
-          >
+          <Button variant="outline" onClick={handleClear} disabled={!file || loading}>
             Clear
           </Button>
           {compressedFile ? (
-            <Button asChild>
-              <a href={compressedFile} download>
-                <FileDown className="mr-2 h-4 w-4" />
-                Download
-              </a>
+            <Button onClick={handleDownloadAndDelete}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Download
             </Button>
           ) : (
             <Button onClick={handleCompress} disabled={!file || loading}>

@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-// Spring Boot API URL
-const SPRING_BOOT_API = "https://pdf-compressor-production.up.railway.app/api"
+const prod = "https://pdf-compressor-production.up.railway.app/api"
+const local = "http://localhost:8080/api"
+const SPRING_BOOT_API = prod
 
 export async function GET(request: NextRequest) {
   try {
