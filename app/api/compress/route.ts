@@ -70,14 +70,24 @@ export async function POST(request: NextRequest) {
 // In a real application, you would call your Java application here
 async function simulateJavaCompression(inputPath: string, outputPath: string, quality: number) {
   // Simulate compression by copying the file (in a real app, you'd call Java here)
-  const fs = require("fs")
-  fs.copyFileSync(inputPath, outputPath)
-
-  // Simulate processing time
-  await new Promise((resolve) => setTimeout(resolve, 2000))
-
-  // In a real implementation, you would execute your Java application like:
-  // await execPromise(`java -jar pdf-compressor.jar ${inputPath} ${outputPath} ${quality}`)
-
-  return outputPath
+  const jarPath = join(process.cwd(), "java", "target", "pdf-compressor-1.0-SNAPSHOT-jar-with-dependencies.jar")
+  
+  // Execute the Java application with the provided parameters
+  const command = `java -jar "${jarPath}" "${inputPath}" "${outputPath}" ${quality}`
+  
+  console.log(`Executing: ${command}`)
+  
+  try {
+    const { stdout, stderr } = await execPromise(command)
+    
+    if (stderr) {
+      console.error(`Java process stderr: ${stderr}`)
+    }
+    
+    console.log(`Java process stdout: ${stdout}`)
+    return outputPath
+  } catch (error) {
+    console.error("Error executing Java process:", error)
+    throw error
+  }
 }
