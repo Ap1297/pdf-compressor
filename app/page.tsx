@@ -269,6 +269,11 @@ export default function PDFCompressor() {
             </Button>
           )}
         </CardFooter>
+        <CardHeader>
+          <CardDescription>
+            Made by Ankit M. Panchal
+          </CardDescription>
+        </CardHeader>
       </Card>
       <Toaster />
     </div>
