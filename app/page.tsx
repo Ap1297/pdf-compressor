@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Slider } from "@/components/ui/slider"
 import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
+import { ThemeToggleWithLabel } from "@/components/theme-toggle-with-label"
 
 export default function PDFCompressor() {
   const [file, setFile] = useState<File | null>(null)
@@ -40,7 +41,6 @@ export default function PDFCompressor() {
         })
         return
       }
-      
       setFile(selectedFile)
       setOriginalSize(selectedFile.size)
       setCompressedFile(null)
@@ -165,117 +165,124 @@ export default function PDFCompressor() {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <FileDown className="h-6 w-6" />
-            PDF Compressor
-          </CardTitle>
-          <CardDescription>
-            Upload a PDF file and compress it to reduce file size while maintaining quality
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <input
-              type="file"
-              id="pdf-upload"
-              className="hidden"
-              onChange={handleFileChange}
-              accept="application/pdf"
-            />
-            <label htmlFor="pdf-upload" className="flex flex-col items-center justify-center cursor-pointer">
-              <Upload className="h-10 w-10 text-gray-400 mb-2" />
-              <span className="text-sm font-medium">{file ? file.name : "Click to upload or drag and drop"}</span>
-              <span className="text-xs text-gray-500 mt-1">PDF (max. 1GB)</span>
-            </label>
-          </div>
+    <div className="min-h-screen bg-background transition-colors duration-300">
+      <div className="container mx-auto py-10">
+        <div className="flex justify-end mb-4">
+          <ThemeToggleWithLabel />
+        </div>
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center gap-2">
+              <FileDown className="h-6 w-6" />
+              PDF Compressor
+            </CardTitle>
+            <CardDescription>
+              Upload a PDF file and compress it to reduce file size while maintaining quality
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+              <input
+                type="file"
+                id="pdf-upload"
+                className="hidden"
+                onChange={handleFileChange}
+                accept="application/pdf"
+              />
+              <label htmlFor="pdf-upload" className="flex flex-col items-center justify-center cursor-pointer">
+                <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+                <span className="text-sm font-medium">{file ? file.name : "Click to upload or drag and drop"}</span>
+                <span className="text-xs text-muted-foreground mt-1">PDF (max. 1GB)</span>
+              </label>
+            </div>
 
-          {file && (
-            <>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Compression Level</span>
-                  <span className="text-sm text-gray-500">{compressionLevel[0]}%</span>
-                </div>
-                <Slider
-                  value={compressionLevel}
-                  onValueChange={setCompressionLevel}
-                  min={10}
-                  max={90}
-                  step={10}
-                  disabled={loading}
-                />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Higher Quality</span>
-                  <span>Smaller Size</span>
-                </div>
-              </div>
-
-              {loading && (
+            {file && (
+              <>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium">Compressing...</span>
-                    <span className="text-sm text-gray-500">{progress}%</span>
+                    <span className="text-sm font-medium">Compression Level</span>
+                    <span className="text-sm text-muted-foreground">{compressionLevel[0]}%</span>
                   </div>
-                  <Progress value={progress} className="h-2" />
+                  <Slider
+                    value={compressionLevel}
+                    onValueChange={setCompressionLevel}
+                    min={10}
+                    max={90}
+                    step={10}
+                    disabled={loading}
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Higher Quality</span>
+                    <span>Smaller Size</span>
+                  </div>
                 </div>
-              )}
 
-              {compressedFile && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium">Original size:</span>
-                    <span className="text-sm">{formatFileSize(originalSize!)}</span>
+                {loading && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Compressing...</span>
+                      <span className="text-sm text-muted-foreground">{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
                   </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium">Compressed size:</span>
-                    <span className="text-sm">{formatFileSize(compressedSize!)}</span>
+                )}
+
+                {compressedFile && (
+                  <div className="bg-muted/30 p-4 rounded-lg">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium">Original size:</span>
+                      <span className="text-sm">{formatFileSize(originalSize!)}</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium">Compressed size:</span>
+                      <span className="text-sm">{formatFileSize(compressedSize!)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Reduction:</span>
+                      <span
+                        className={`text-sm ${calculateReduction() > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+                      >
+                        {calculateReduction() > 0 ? `${calculateReduction()}%` : "No reduction"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium">Reduction:</span>
-                    <span className={`text-sm ${calculateReduction() > 0 ? "text-green-600" : "text-red-600"}`}>
-                      {calculateReduction() > 0 ? `${calculateReduction()}%` : "No reduction"}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={handleClear} disabled={!file || loading}>
-            Clear
-          </Button>
-          {compressedFile ? (
-            <Button onClick={handleDownloadAndDelete}>
-              <FileDown className="mr-2 h-4 w-4" />
-              Download
+                )}
+              </>
+            )}
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={handleClear} disabled={!file || loading}>
+              Clear
             </Button>
-          ) : (
-            <Button onClick={handleCompress} disabled={!file || loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Compressing...
-                </>
-              ) : (
-                <>
-                  <FileUp className="mr-2 h-4 w-4" />
-                  Compress PDF
-                </>
-              )}
-            </Button>
-          )}
-        </CardFooter>
-        <CardHeader>
+            {compressedFile ? (
+              <Button onClick={handleDownloadAndDelete}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Download
+              </Button>
+            ) : (
+              <Button onClick={handleCompress} disabled={!file || loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Compressing...
+                  </>
+                ) : (
+                  <>
+                    <FileUp className="mr-2 h-4 w-4" />
+                    Compress PDF
+                  </>
+                )}
+              </Button>
+            )}
+          </CardFooter>
+          <CardHeader>
           <CardDescription>
             Made by Ankit M. Panchal
           </CardDescription>
         </CardHeader>
-      </Card>
-      <Toaster />
+        </Card>
+        <Toaster />
+      </div>
     </div>
   )
 }
