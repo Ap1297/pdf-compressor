@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 
 const prod = "https://pdf-compressor-production.up.railway.app/api"
 const local = "http://localhost:8080/api"
-const SPRING_BOOT_API = local
+const SPRING_BOOT_API = prod
 
 export async function GET(request: NextRequest) {
   try {
