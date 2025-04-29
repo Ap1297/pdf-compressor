@@ -13,7 +13,8 @@ sudo systemctl enable jenkins
 sudo systemctl start jenkins
 
 
-java -Xms512m -Xmx2g -jar target/pdf-compressor-1.0-SNAPSHOT.jar
+java  -Xms512m -Xmx1g -jar target/pdf-compressor-1.0-SNAPSHOT.jar --server.port=8081
+
 
 
 pipeline {
