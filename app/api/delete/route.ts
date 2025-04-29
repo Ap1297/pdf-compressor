@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 
 const prod = "http://3.142.245.96:8081/api"
 const local = "http://localhost:8081/api"
-const SPRING_BOOT_API = local
+const SPRING_BOOT_API = prod
 
 export async function DELETE(request: NextRequest) {
   try {
