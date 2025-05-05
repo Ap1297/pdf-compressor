@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
@@ -20,7 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*") // Restrict in production
+@CrossOrigin(origins = "*") // In production, restrict this to your frontend URL
 public class PDFCompressorController {
 
     private final PDFCompressorService pdfCompressorService;
@@ -33,22 +32,25 @@ public class PDFCompressorController {
     @PostMapping("/compress")
     public ResponseEntity<CompressionResponse> compressPDF(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "compressionLevel", defaultValue = "1") int compressionLevel) {
-
+            @RequestParam("compressionLevel") int compressionLevel) {
+        
         try {
+            // Validate file
             if (file.isEmpty() || !file.getContentType().equals("application/pdf")) {
-                return ResponseEntity.badRequest()
-                        .body(new CompressionResponse(false, null, 0, 0, "Invalid file. Only PDFs are allowed."));
+                return ResponseEntity.badRequest().body(new CompressionResponse(false, null, 0, 0, "Invalid file"));
             }
 
-            // Compress PDF using Ghostscript (compressionLevel: 0 = low, 1 = med, 2 = high)
-            File compressedFile = pdfCompressorService.compressPDF(file, compressionLevel);
-
-            // Prepare metadata for response
-            long originalSize = file.getSize();
-            long compressedSize = compressedFile.length();
-            String fileName = compressedFile.getName();
-
+            // Convert compression level to quality (0-1)
+            float quality = Math.max(0.1f, 1 - (compressionLevel / 100.0f));
+            
+            // Compress the PDF
+            String fileName = pdfCompressorService.compressPDF(file, quality);
+            
+            // Get the size of the original and compressed files
+            long originalSize = pdfCompressorService.getOriginalFileSize(fileName);
+            long compressedSize = pdfCompressorService.getCompressedFileSize(fileName);
+            
+            // Create response
             CompressionResponse response = new CompressionResponse(
                 true,
                 fileName,
@@ -56,13 +58,12 @@ public class PDFCompressorController {
                 compressedSize,
                 "PDF compressed successfully"
             );
-
+            
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError()
-                    .body(new CompressionResponse(false, null, 0, 0, "Compression failed: " + e.getMessage()));
+                .body(new CompressionResponse(false, null, 0, 0, "Error: " + e.getMessage()));
         }
     }
 
@@ -71,12 +72,12 @@ public class PDFCompressorController {
         try {
             Path filePath = pdfCompressorService.getCompressedFilePath(fileName);
             Resource resource = new UrlResource(filePath.toUri());
-
+            
             if (resource.exists()) {
                 return ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_PDF)
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                        .body(resource);
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .body(resource);
             } else {
                 return ResponseEntity.notFound().build();
             }
@@ -84,21 +85,21 @@ public class PDFCompressorController {
             return ResponseEntity.badRequest().build();
         }
     }
-
+    
     @DeleteMapping("/delete/{fileName:.+}")
     public ResponseEntity<Map<String, Object>> deleteFile(@PathVariable String fileName) {
         Map<String, Object> response = new HashMap<>();
-
+        
         try {
             boolean deleted = pdfCompressorService.deleteFiles(fileName);
-
+            
             if (deleted) {
                 response.put("success", true);
                 response.put("message", "Files deleted successfully");
                 return ResponseEntity.ok(response);
             } else {
                 response.put("success", false);
-                response.put("message", "File deletion failed");
+                response.put("message", "Failed to delete files");
                 return ResponseEntity.status(500).body(response);
             }
         } catch (Exception e) {
@@ -107,6 +108,4 @@ public class PDFCompressorController {
             return ResponseEntity.status(500).body(response);
         }
     }
-    
-    
 }
