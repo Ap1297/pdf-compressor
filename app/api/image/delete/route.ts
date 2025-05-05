@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 // Spring Boot API URL
 const prod = "https://pdf-compressor-bprg.onrender.com/api/image"
 const local = "http://localhost:8080/api/image"
-const SPRING_BOOT_API = local
+const SPRING_BOOT_API = prod
 
 export async function DELETE(request: NextRequest) {
   try {
