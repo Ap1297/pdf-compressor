@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
 // Spring Boot API URL
-const prod = "https://pdf-compressor-production.up.railway.app/api"
+const prod = "https://pdf-compressor-bprg.onrender.com/api"
 const local = "http://localhost:8081/api"
 const SPRING_BOOT_API = prod
 
