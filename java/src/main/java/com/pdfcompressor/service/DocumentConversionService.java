@@ -36,7 +36,7 @@ public class DocumentConversionService {
 
     public String convertPdfToWord(MultipartFile file) throws IOException {
         // Generate unique file names
-        String fileId = UUID.randomUUID().toString();
+    	String fileId = file.getOriginalFilename();
         Path inputPath = uploadDir.resolve(fileId + ".pdf");
         Path outputPath = outputDir.resolve(fileId + ".docx");
 

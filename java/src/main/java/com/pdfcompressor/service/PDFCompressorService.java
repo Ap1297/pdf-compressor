@@ -37,7 +37,7 @@ public class PDFCompressorService {
 
     public String compressPDF(MultipartFile file, float quality) throws IOException {
         // Generate unique file names
-        String fileId = UUID.randomUUID().toString();
+        String fileId = file.getOriginalFilename();
         Path inputPath = uploadDir.resolve(fileId + ".pdf");
         Path outputPath = outputDir.resolve(fileId + "_compressed.pdf");
 
