@@ -329,48 +329,60 @@ export default function FileProcessor() {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
-      <div className="container mx-auto py-10">
+      <div className="container mx-auto px-4 py-6 md:py-10">
         <div className="flex justify-end mb-4">
           <ThemeToggleWithLabel />
         </div>
 
         <Tabs defaultValue="pdf" value={activeTab} onValueChange={setActiveTab} className="max-w-2xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="pdf" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              PDF Compression
+          <TabsList className="w-full mb-4 flex flex-wrap overflow-x-auto">
+            <TabsTrigger
+              value="pdf"
+              className="flex-1 min-w-[33%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
+            >
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline sm:inline">PDF Compression</span>
+              <span className="inline xs:hidden sm:hidden">PDF</span>
             </TabsTrigger>
-            <TabsTrigger value="image" className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" />
-              Image Compression
+            <TabsTrigger
+              value="image"
+              className="flex-1 min-w-[33%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
+            >
+              <ImageIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline sm:inline">Image Compression</span>
+              <span className="inline xs:hidden sm:hidden">Image</span>
             </TabsTrigger>
-            <TabsTrigger value="convert" className="flex items-center gap-2">
-              <FileType className="h-4 w-4" />
-              Document Conversion
+            <TabsTrigger
+              value="convert"
+              className="flex-1 min-w-[33%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
+            >
+              <FileType className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline sm:inline">Document Conversion</span>
+              <span className="inline xs:hidden sm:hidden">Convert</span>
             </TabsTrigger>
           </TabsList>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
                 {activeTab === "pdf" ? (
                   <>
-                    <FileText className="h-6 w-6" />
+                    <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
                     PDF Compressor
                   </>
                 ) : activeTab === "image" ? (
                   <>
-                    <ImageIcon className="h-6 w-6" />
+                    <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                     Image Compressor
                   </>
                 ) : (
                   <>
-                    <FileType className="h-6 w-6" />
+                    <FileType className="h-5 w-5 sm:h-6 sm:w-6" />
                     Document Converter
                   </>
                 )}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 {activeTab === "pdf"
                   ? "Upload a PDF file and compress it to reduce file size while maintaining quality"
                   : activeTab === "image"
@@ -378,9 +390,9 @@ export default function FileProcessor() {
                     : "Convert between PDF and Word document formats"}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {activeTab === "convert" && (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div className="text-sm font-medium">Conversion Type</div>
                   <RadioGroup
                     value={conversionDirection}
@@ -389,27 +401,27 @@ export default function FileProcessor() {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="pdf-to-word" id="pdf-to-word" />
-                      <Label htmlFor="pdf-to-word" className="flex items-center gap-2">
+                      <Label htmlFor="pdf-to-word" className="flex items-center gap-1 sm:gap-2 text-sm cursor-pointer">
                         <FileText className="h-4 w-4" />
                         <ArrowRight className="h-3 w-3" />
                         <FileType className="h-4 w-4" />
-                        PDF to Word
+                        <span>PDF to Word</span>
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="word-to-pdf" id="word-to-pdf" />
-                      <Label htmlFor="word-to-pdf" className="flex items-center gap-2">
+                      <Label htmlFor="word-to-pdf" className="flex items-center gap-1 sm:gap-2 text-sm cursor-pointer">
                         <FileType className="h-4 w-4" />
                         <ArrowRight className="h-3 w-3" />
                         <FileText className="h-4 w-4" />
-                        Word to PDF
+                        <span>Word to PDF</span>
                       </Label>
                     </div>
                   </RadioGroup>
                 </div>
               )}
 
-              <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-muted rounded-lg p-4 sm:p-6 text-center">
                 <input
                   type="file"
                   id="file-upload"
@@ -418,15 +430,17 @@ export default function FileProcessor() {
                   accept={getAcceptedFileTypes()}
                 />
                 <label htmlFor="file-upload" className="flex flex-col items-center justify-center cursor-pointer">
-                  <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-                  <span className="text-sm font-medium">{file ? file.name : "Click to upload or drag and drop"}</span>
+                  <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground mb-2" />
+                  <span className="text-sm font-medium break-words max-w-full px-2">
+                    {file ? file.name : "Click to upload or drag and drop"}
+                  </span>
                   <span className="text-xs text-muted-foreground mt-1">{getFileTypeDescription()}</span>
                 </label>
               </div>
 
               {filePreview && (
                 <div className="flex justify-center">
-                  <div className="relative w-full max-w-xs h-48 border rounded-md overflow-hidden">
+                  <div className="relative w-full max-w-xs h-36 sm:h-48 border rounded-md overflow-hidden">
                     <img
                       src={filePreview || "/placeholder.svg"}
                       alt="Preview"
@@ -470,7 +484,7 @@ export default function FileProcessor() {
               )}
 
               {processedFile && activeTab !== "convert" && (
-                <div className="bg-muted/30 p-4 rounded-lg">
+                <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Original size:</span>
                     <span className="text-sm">{formatFileSize(originalSize!)}</span>
@@ -491,7 +505,7 @@ export default function FileProcessor() {
               )}
 
               {processedFile && activeTab === "convert" && (
-                <div className="bg-muted/30 p-4 rounded-lg">
+                <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Conversion:</span>
                     <span className="text-sm">
@@ -505,21 +519,34 @@ export default function FileProcessor() {
                 </div>
               )}
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={handleClear} disabled={!file || loading}>
+            <CardFooter className="p-4 sm:p-6 flex flex-col sm:flex-row gap-2 sm:gap-4">
+              <Button
+                variant="outline"
+                onClick={handleClear}
+                disabled={!file || loading}
+                className="w-full sm:w-auto order-2 sm:order-1"
+              >
                 Clear
               </Button>
+              <div className="hidden sm:block sm:grow"></div>
               {processedFile ? (
-                <Button onClick={handleDownloadAndDelete}>
+                <Button onClick={handleDownloadAndDelete} className="w-full sm:w-auto order-1 sm:order-2">
                   <FileDown className="mr-2 h-4 w-4" />
                   Download
                 </Button>
               ) : (
-                <Button onClick={handleProcess} disabled={!file || loading}>
+                <Button
+                  onClick={handleProcess}
+                  disabled={!file || loading}
+                  className="w-full sm:w-auto order-1 sm:order-2"
+                >
                   {getButtonText()}
                 </Button>
               )}
             </CardFooter>
+            <CardHeader className="p-4 sm:p-6 pt-0 sm:pt-0 border-t">
+              <CardDescription className="text-center text-xs sm:text-sm">Made By Ankit Panchal</CardDescription>
+            </CardHeader>
           </Card>
         </Tabs>
         <Toaster />
