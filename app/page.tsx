@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Upload, FileUp, FileDown, Loader2, ImageIcon, FileText, FileType, ArrowRight } from "lucide-react"
+import { Upload, FileUp, FileDown, Loader2, ImageIcon, FileText, FileType, ArrowRight, Eraser } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -34,20 +34,25 @@ export default function FileProcessor() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [compressionLevel, setCompressionLevel] = useState([50])
+  const [watermarkThreshold, setWatermarkThreshold] = useState([200])
+  const [watermarkTolerance, setWatermarkTolerance] = useState([30])
   const [originalSize, setOriginalSize] = useState<number | null>(null)
   const [compressedSize, setCompressedSize] = useState<number | null>(null)
   const [filePreview, setFilePreview] = useState<string | null>(null)
   const [conversionType, setConversionType] = useState<string>("compress")
   const [conversionDirection, setConversionDirection] = useState<string>("pdf-to-word")
+  const [watermarkFileType, setWatermarkFileType] = useState<string>("image")
 
   // Reset state when changing tabs
   useEffect(() => {
     handleClear()
 
-    // Set default conversion type based on active tab
+    // Set default values based on active tab
     if (activeTab === "convert") {
       setConversionType("convert")
       setConversionDirection("pdf-to-word")
+    } else if (activeTab === "watermark") {
+      setWatermarkFileType("image")
     } else {
       setConversionType("compress")
     }
@@ -57,7 +62,7 @@ export default function FileProcessor() {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0]
 
-      // Check file type based on active tab and conversion type
+      // Check file type based on active tab and operation type
       if (activeTab === "pdf" && !SUPPORTED_PDF_TYPES.includes(selectedFile.type)) {
         toast({
           title: "Invalid file type",
@@ -88,6 +93,22 @@ export default function FileProcessor() {
           })
           return
         }
+      } else if (activeTab === "watermark") {
+        if (watermarkFileType === "image" && !SUPPORTED_IMAGE_TYPES.includes(selectedFile.type)) {
+          toast({
+            title: "Invalid file type",
+            description: "Please select an image file for watermark removal",
+            variant: "destructive",
+          })
+          return
+        } else if (watermarkFileType === "pdf" && !SUPPORTED_PDF_TYPES.includes(selectedFile.type)) {
+          toast({
+            title: "Invalid file type",
+            description: "Please select a PDF file for watermark removal",
+            variant: "destructive",
+          })
+          return
+        }
       }
 
       // Check file size
@@ -107,7 +128,10 @@ export default function FileProcessor() {
       setCompressedSize(null)
 
       // Create preview for images
-      if (activeTab === "image" && selectedFile.type.startsWith("image/")) {
+      if (
+        (activeTab === "image" || (activeTab === "watermark" && watermarkFileType === "image")) &&
+        selectedFile.type.startsWith("image/")
+      ) {
         const reader = new FileReader()
         reader.onload = (e) => {
           setFilePreview(e.target?.result as string)
@@ -128,9 +152,12 @@ export default function FileProcessor() {
     const formData = new FormData()
     formData.append("file", file)
 
-    // Add compression level for compression operations
-    if (activeTab !== "convert") {
+    // Add parameters based on operation type
+    if (activeTab === "pdf" || activeTab === "image") {
       formData.append("compressionLevel", compressionLevel[0].toString())
+    } else if (activeTab === "watermark") {
+      formData.append("threshold", watermarkThreshold[0].toString())
+      formData.append("tolerance", watermarkTolerance[0].toString())
     }
 
     try {
@@ -153,6 +180,10 @@ export default function FileProcessor() {
         endpoint = "/api/image/compress"
       } else if (activeTab === "convert") {
         endpoint = `/api/convert/${conversionDirection}`
+      } else if (activeTab === "watermark") {
+        endpoint = "/api/watermark"
+        // Add fileType to formData for watermark removal
+        formData.append("fileType", watermarkFileType)
       }
 
       const response = await fetch(endpoint, {
@@ -176,7 +207,7 @@ export default function FileProcessor() {
       setProcessedFileName(fileName)
 
       // For compression operations, set size information
-      if (activeTab !== "convert") {
+      if (activeTab === "pdf" || activeTab === "image") {
         setOriginalSize(data.originalSize)
         setCompressedSize(data.compressedSize)
 
@@ -184,16 +215,31 @@ export default function FileProcessor() {
           title: "Compression complete",
           description: `Reduced from ${formatFileSize(data.originalSize)} to ${formatFileSize(data.compressedSize)}`,
         })
-      } else {
+      } else if (activeTab === "convert") {
         // For conversion operations
         toast({
           title: "Conversion complete",
           description: `Successfully converted from ${data.sourceFormat} to ${data.targetFormat}`,
         })
+      } else if (activeTab === "watermark") {
+        // For watermark removal operations
+        toast({
+          title: "Watermark removal complete",
+          description: `Successfully removed watermark from ${watermarkFileType === "image" ? "image" : "PDF"}`,
+        })
       }
     } catch (error) {
+      let errorTitle = "Operation failed"
+      if (activeTab === "pdf" || activeTab === "image") {
+        errorTitle = "Compression failed"
+      } else if (activeTab === "convert") {
+        errorTitle = "Conversion failed"
+      } else if (activeTab === "watermark") {
+        errorTitle = "Watermark removal failed"
+      }
+
       toast({
-        title: activeTab === "convert" ? "Conversion failed" : "Compression failed",
+        title: errorTitle,
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       })
@@ -220,6 +266,8 @@ export default function FileProcessor() {
           endpoint = "/api/image/delete"
         } else if (activeTab === "convert") {
           endpoint = "/api/convert/delete"
+        } else if (activeTab === "watermark") {
+          endpoint = "/api/watermark/delete"
         }
 
         // Delete the file
@@ -261,6 +309,8 @@ export default function FileProcessor() {
         endpoint = "/api/image/delete"
       } else if (activeTab === "convert") {
         endpoint = "/api/convert/delete"
+      } else if (activeTab === "watermark") {
+        endpoint = "/api/watermark/delete"
       }
 
       fetch(`${endpoint}?file=${processedFileName}`, {
@@ -283,7 +333,11 @@ export default function FileProcessor() {
       return (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          {activeTab === "convert" ? "Converting..." : "Compressing..."}
+          {activeTab === "convert"
+            ? "Converting..."
+            : activeTab === "watermark"
+              ? "Removing watermark..."
+              : "Compressing..."}
         </>
       )
     }
@@ -293,6 +347,13 @@ export default function FileProcessor() {
         <>
           <FileType className="mr-2 h-4 w-4" />
           Convert {conversionDirection === "pdf-to-word" ? "PDF to Word" : "Word to PDF"}
+        </>
+      )
+    } else if (activeTab === "watermark") {
+      return (
+        <>
+          <Eraser className="mr-2 h-4 w-4" />
+          Remove Watermark
         </>
       )
     }
@@ -312,6 +373,8 @@ export default function FileProcessor() {
       return ".jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif"
     } else if (activeTab === "convert") {
       return conversionDirection === "pdf-to-word" ? ".pdf" : ".docx,.doc"
+    } else if (activeTab === "watermark") {
+      return watermarkFileType === "image" ? ".jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff,.tif" : ".pdf"
     }
     return ""
   }
@@ -323,6 +386,8 @@ export default function FileProcessor() {
       return "JPEG, PNG, GIF, BMP, WebP, TIFF (max. 1GB)"
     } else if (activeTab === "convert") {
       return conversionDirection === "pdf-to-word" ? "PDF (max. 1GB)" : "DOCX, DOC (max. 1GB)"
+    } else if (activeTab === "watermark") {
+      return watermarkFileType === "image" ? "JPEG, PNG, GIF, BMP, WebP, TIFF (max. 1GB)" : "PDF (max. 1GB)"
     }
     return ""
   }
@@ -338,27 +403,35 @@ export default function FileProcessor() {
           <TabsList className="w-full mb-4 flex flex-wrap overflow-x-auto">
             <TabsTrigger
               value="pdf"
-              className="flex-1 min-w-[33%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
+              className="flex-1 min-w-[25%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
             >
               <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline sm:inline">PDF Compression</span>
+              <span className="hidden xs:inline sm:inline">PDF</span>
               <span className="inline xs:hidden sm:hidden">PDF</span>
             </TabsTrigger>
             <TabsTrigger
               value="image"
-              className="flex-1 min-w-[33%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
+              className="flex-1 min-w-[25%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
             >
               <ImageIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline sm:inline">Image Compression</span>
-              <span className="inline xs:hidden sm:hidden">Image</span>
+              <span className="hidden xs:inline sm:inline">Image</span>
+              <span className="inline xs:hidden sm:hidden">IMG</span>
             </TabsTrigger>
             <TabsTrigger
               value="convert"
-              className="flex-1 min-w-[33%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
+              className="flex-1 min-w-[25%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
             >
               <FileType className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline sm:inline">Document Conversion</span>
-              <span className="inline xs:hidden sm:hidden">Convert</span>
+              <span className="hidden xs:inline sm:inline">Convert</span>
+              <span className="inline xs:hidden sm:hidden">CNV</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="watermark"
+              className="flex-1 min-w-[25%] flex items-center justify-center gap-1 text-xs sm:text-sm py-2"
+            >
+              <Eraser className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline sm:inline">Watermark</span>
+              <span className="inline xs:hidden sm:hidden">WM</span>
             </TabsTrigger>
           </TabsList>
 
@@ -375,10 +448,15 @@ export default function FileProcessor() {
                     <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6" />
                     Image Compressor
                   </>
-                ) : (
+                ) : activeTab === "convert" ? (
                   <>
                     <FileType className="h-5 w-5 sm:h-6 sm:w-6" />
                     Document Converter
+                  </>
+                ) : (
+                  <>
+                    <Eraser className="h-5 w-5 sm:h-6 sm:w-6" />
+                    Watermark Remover
                   </>
                 )}
               </CardTitle>
@@ -387,7 +465,9 @@ export default function FileProcessor() {
                   ? "Upload a PDF file and compress it to reduce file size while maintaining quality"
                   : activeTab === "image"
                     ? "Upload an image and compress it to reduce file size while maintaining quality"
-                    : "Convert between PDF and Word document formats"}
+                    : activeTab === "convert"
+                      ? "Convert between PDF and Word document formats"
+                      : "Remove watermarks from images and PDF documents"}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
@@ -415,6 +495,38 @@ export default function FileProcessor() {
                         <ArrowRight className="h-3 w-3" />
                         <FileText className="h-4 w-4" />
                         <span>Word to PDF</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+
+              {activeTab === "watermark" && (
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="text-sm font-medium">File Type</div>
+                  <RadioGroup
+                    value={watermarkFileType}
+                    onValueChange={setWatermarkFileType}
+                    className="flex flex-col space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="image" id="watermark-image" />
+                      <Label
+                        htmlFor="watermark-image"
+                        className="flex items-center gap-1 sm:gap-2 text-sm cursor-pointer"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        <span>Image</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="pdf" id="watermark-pdf" />
+                      <Label
+                        htmlFor="watermark-pdf"
+                        className="flex items-center gap-1 sm:gap-2 text-sm cursor-pointer"
+                      >
+                        <FileText className="h-4 w-4" />
+                        <span>PDF Document</span>
                       </Label>
                     </div>
                   </RadioGroup>
@@ -450,7 +562,7 @@ export default function FileProcessor() {
                 </div>
               )}
 
-              {file && activeTab !== "convert" && (
+              {file && (activeTab === "pdf" || activeTab === "image") && (
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Compression Level</span>
@@ -471,11 +583,57 @@ export default function FileProcessor() {
                 </div>
               )}
 
+              {file && activeTab === "watermark" && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Watermark Threshold</span>
+                      <span className="text-sm text-muted-foreground">{watermarkThreshold[0]}</span>
+                    </div>
+                    <Slider
+                      value={watermarkThreshold}
+                      onValueChange={setWatermarkThreshold}
+                      min={100}
+                      max={250}
+                      step={10}
+                      disabled={loading}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Darker Watermarks</span>
+                      <span>Lighter Watermarks</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm font-medium">Watermark Tolerance</span>
+                      <span className="text-sm text-muted-foreground">{watermarkTolerance[0]}</span>
+                    </div>
+                    <Slider
+                      value={watermarkTolerance}
+                      onValueChange={setWatermarkTolerance}
+                      min={10}
+                      max={50}
+                      step={5}
+                      disabled={loading}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Less Aggressive</span>
+                      <span>More Aggressive</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {loading && (
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">
-                      {activeTab === "convert" ? "Converting..." : "Compressing..."}
+                      {activeTab === "convert"
+                        ? "Converting..."
+                        : activeTab === "watermark"
+                          ? "Removing watermark..."
+                          : "Compressing..."}
                     </span>
                     <span className="text-sm text-muted-foreground">{progress}%</span>
                   </div>
@@ -483,7 +641,7 @@ export default function FileProcessor() {
                 </div>
               )}
 
-              {processedFile && activeTab !== "convert" && (
+              {processedFile && (activeTab === "pdf" || activeTab === "image") && (
                 <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Original size:</span>
@@ -510,6 +668,21 @@ export default function FileProcessor() {
                     <span className="text-sm font-medium">Conversion:</span>
                     <span className="text-sm">
                       {conversionDirection === "pdf-to-word" ? "PDF → Word" : "Word → PDF"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Status:</span>
+                    <span className="text-sm text-green-600 dark:text-green-400">Ready for download</span>
+                  </div>
+                </div>
+              )}
+
+              {processedFile && activeTab === "watermark" && (
+                <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Process:</span>
+                    <span className="text-sm">
+                      Watermark Removal ({watermarkFileType === "image" ? "Image" : "PDF"})
                     </span>
                   </div>
                   <div className="flex justify-between">
