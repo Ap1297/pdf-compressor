@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-const prod = "https://pdf-compressor-bprg.onrender.com/api"
-const local = "http://localhost:8080/api"
+const prod = "https://pdf-compressor-bprg.onrender.com/api/convert"
+const local = "http://localhost:8080/api/convert"
 const SPRING_BOOT_API = prod
 
 export async function DELETE(request: NextRequest) {

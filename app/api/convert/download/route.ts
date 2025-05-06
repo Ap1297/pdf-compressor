@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-const prod = "https://pdf-compressor-bprg.onrender.com/api"
-const local = "http://localhost:8080/api"
+const prod = "https://pdf-compressor-bprg.onrender.com/api/convert"
+const local = "http://localhost:8080/api/convert"
 const SPRING_BOOT_API = prod
 
 export async function GET(request: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     if (!fileName) {
       return NextResponse.json({ error: "No file specified" }, { status: 400 })
     }
-console.log(SPRING_BOOT_API);
+
     // Forward the request to Spring Boot
     const response = await fetch(`${SPRING_BOOT_API}/download/${fileName}`)
 
@@ -23,10 +23,18 @@ console.log(SPRING_BOOT_API);
     // Get the file content
     const fileBuffer = await response.arrayBuffer()
 
+    // Determine content type based on file extension
+    let contentType = "application/octet-stream"
+    if (fileName.endsWith(".pdf")) {
+      contentType = "application/pdf"
+    } else if (fileName.endsWith(".docx")) {
+      contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    }
+
     // Set appropriate headers for file download
     const headers = new Headers()
     headers.set("Content-Disposition", `attachment; filename=${fileName}`)
-    headers.set("Content-Type", "application/pdf")
+    headers.set("Content-Type", contentType)
 
     return new NextResponse(fileBuffer, {
       status: 200,
@@ -37,3 +45,4 @@ console.log(SPRING_BOOT_API);
     return NextResponse.json({ error: "Failed to download file" }, { status: 500 })
   }
 }
+
