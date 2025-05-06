@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-// Spring Boot API URL
-const SPRING_BOOT_API = "http://localhost:8080/api/watermark"
+const prod = "https://pdf-compressor-bprg.onrender.com/api/watermark"
+const local = "http://localhost:8080/api/watermark"
+const SPRING_BOOT_API = prod
 
 export async function POST(request: NextRequest) {
   try {
