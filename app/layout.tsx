@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "PDF Compressor",
+  title: "File Compress And Convert",
   description: "Compress PDF files while maintaining quality",
 }
 

@@ -26,7 +26,7 @@ export function Logo({ size = "md", showText = true }: LogoProps) {
       {showText && (
         <div className="font-bold tracking-tight leading-none">
           <span className={`${textSizeClasses[size]} text-primary`}>File</span>
-          <span className={`${textSizeClasses[size]}`}>Compressor</span>
+          <span className={`${textSizeClasses[size]}`}> Compress And Convert</span>
         </div>
       )}
     </div>

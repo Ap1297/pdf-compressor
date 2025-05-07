@@ -863,8 +863,8 @@ export default function FileProcessor() {
 
         {/* Footer with additional information */}
         <footer className="mt-12 text-center text-sm text-muted-foreground">
-          <p className="mb-2">FileCompressor - Your all-in-one solution for file optimization</p>
-          <p>© 2025 FileCompressor. All rights reserved.</p>
+          <p className="mb-2">FileCompressConvert - Your all-in-one solution for file optimization</p>
+          <p>© 2025 FileCompressConvert. All rights reserved.</p>
         </footer>
 
         <Toaster />
