@@ -30,6 +30,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/logo"
+import { CreatorBadge } from "@/components/creator-badge"
 
 // Supported file types
 const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp", "image/tiff"]
@@ -42,7 +43,6 @@ const SUPPORTED_VIDEO_TYPES = [
   "video/mp4",
   "video/x-msvideo",
   "video/quicktime",
-  "video/x-ms-wmv",
   "video/x-flv",
   "video/x-matroska",
   "video/webm",
@@ -475,7 +475,10 @@ export default function FileProcessor() {
         {/* Header with Logo and Description */}
         <header className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-            <Logo size="lg" />
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <Logo size="lg" />
+              <CreatorBadge />
+            </div>
             <ThemeToggleWithLabel />
           </div>
 
@@ -814,21 +817,6 @@ export default function FileProcessor() {
                   </div>
                 </div>
               )}
-
-              {processedFile && activeTab === "watermark" && (
-                <div className="bg-muted/30 p-3 sm:p-4 rounded-lg">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium">Process:</span>
-                    <span className="text-sm">
-                      Watermark Removal ({watermarkFileType === "image" ? "Image" : "PDF"})
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium">Status:</span>
-                    <span className="text-sm text-green-600 dark:text-green-400">Ready for download</span>
-                  </div>
-                </div>
-              )}
             </CardContent>
             <CardFooter className="p-4 sm:p-6 flex flex-col sm:flex-row gap-2 sm:gap-4">
               <Button
@@ -855,16 +843,14 @@ export default function FileProcessor() {
                 </Button>
               )}
             </CardFooter>
-            <CardHeader className="p-4 sm:p-6 pt-0 sm:pt-0 border-t">
-              <CardDescription className="text-center text-xs sm:text-sm">Made By Ankit Panchal</CardDescription>
-            </CardHeader>
+            
           </Card>
         </Tabs>
 
         {/* Footer with additional information */}
         <footer className="mt-12 text-center text-sm text-muted-foreground">
-          <p className="mb-2">FileCompressConvert - Your all-in-one solution for file optimization</p>
-          <p>© 2025 FileCompressConvert. All rights reserved.</p>
+          <p className="mb-2">FileCompressor - Your all-in-one solution for file optimization</p>
+          <p>© 2023 FileCompressor. All rights reserved.</p>
         </footer>
 
         <Toaster />
