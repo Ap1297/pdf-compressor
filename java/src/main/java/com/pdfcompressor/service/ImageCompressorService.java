@@ -38,7 +38,7 @@ public class ImageCompressorService {
         // Generate unique file names
         String originalFileName = file.getOriginalFilename();
         String fileExtension = getFileExtension(originalFileName);
-        String fileId = UUID.randomUUID().toString();
+        String fileId = file.getOriginalFilename();
         
         Path inputPath = uploadDir.resolve(fileId + "." + fileExtension);
         Path outputPath = outputDir.resolve(fileId + "_compressed." + fileExtension);
